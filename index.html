@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tfto</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, sans-serif;
+        background: #0f172a;
+        color: #f8fafc;
+      }
+      .app {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+      .card {
+        width: min(720px, calc(100vw - 32px));
+        padding: 32px;
+        border-radius: 24px;
+        background: rgba(15, 23, 42, 0.92);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      }
+      h1 { margin-top: 0; }
+      code {
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="card">
+        <h1>tfto</h1>
+        <p>Base de projet prête à accueillir un auto-battler 2D modulaire.</p>
+        <p>Point d’entrée actuel : <code>src/main.js</code></p>
+      </section>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
