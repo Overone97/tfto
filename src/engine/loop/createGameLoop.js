@@ -1,4 +1,4 @@
-export function createGameLoop({ state, events }) {
+export function createGameLoop({ state, events, runtime }) {
   let started = false;
 
   return {
@@ -6,6 +6,7 @@ export function createGameLoop({ state, events }) {
       if (started) return;
       started = true;
       events.emit('game:booted', { state });
+      runtime.render();
       console.log('[tfto] game loop started');
     },
   };

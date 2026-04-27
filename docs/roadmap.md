@@ -30,3 +30,6 @@
 - équilibrage
 - tests ciblés
 - itérations de confort
+
+## Versions
+- 0.0.1 — grille, board state, unités data-driven, début du combat auto
