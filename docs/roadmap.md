@@ -33,3 +33,4 @@
 
 ## Versions
 - 0.0.1 — grille, board state, unités data-driven, début du combat auto
+- 0.0.2 — shop, bench, placement, rounds ennemis et prototype GitHub Pages jouable
