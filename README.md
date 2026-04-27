@@ -43,3 +43,7 @@ Construire un prototype lisible, extensible et data-driven autour de 6 piliers :
 ## Structure
 
 Voir `docs/architecture.md` et `docs/roadmap.md`.
+
+## Notes
+
+Première PR dédiée à la fondation technique du projet.
