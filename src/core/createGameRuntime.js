@@ -26,6 +26,22 @@ const ENEMY_LAYOUTS = {
   ],
 };
 
+const SHOP_ODDS_BY_LEVEL = {
+  1: { 1: 100, 2: 0, 3: 0 },
+  2: { 1: 75, 2: 25, 3: 0 },
+  3: { 1: 55, 2: 35, 3: 10 },
+  4: { 1: 35, 2: 45, 3: 20 },
+  5: { 1: 20, 2: 50, 3: 30 },
+  6: { 1: 10, 2: 45, 3: 45 },
+};
+
+const XP_TO_LEVEL = {
+  3: 8,
+  4: 12,
+  5: 16,
+  6: Infinity,
+};
+
 const SYNERGY_RULES = {
   'forêt': {
     min: 2,
@@ -61,22 +77,6 @@ const SYNERGY_RULES = {
   },
 };
 
-function pickRandomUnit() {
-  return UNIT_CATALOG[Math.floor(Math.random() * UNIT_CATALOG.length)];
-}
-
-function createShopOffer(slot) {
-  const unit = pickRandomUnit();
-  return {
-    slot,
-    unitId: unit.id,
-    name: unit.name,
-    cost: unit.cost,
-    traits: [...unit.traits],
-    stats: { ...unit.stats },
-  };
-}
-
 function getCatalogUnit(unitId) {
   return UNIT_CATALOG.find(unit => unit.id === unitId);
 }
@@ -104,11 +104,52 @@ function restoreUnitForBattle(unit) {
   unit.combat.currentHealth = unit.stats.maxHealth;
   unit.combat.attackCooldown = 0;
   unit.combat.targetId = null;
+  unit.combat.mana = 0;
   unit.combat.isAlive = true;
 }
 
 function getInterestGold(gold, economy) {
   return Math.min(economy.maxInterest, Math.floor(gold / economy.interestStep));
+}
+
+function getMaxUnitsForLevel(level) {
+  return Math.min(6, Math.max(2, level + 1));
+}
+
+function getXpRequired(level) {
+  return XP_TO_LEVEL[level] ?? Infinity;
+}
+
+function pickRandomUnitForLevel(level) {
+  const odds = SHOP_ODDS_BY_LEVEL[level] || SHOP_ODDS_BY_LEVEL[6];
+  const roll = Math.random() * 100;
+  let cursor = 0;
+  let selectedRarity = 1;
+
+  for (const rarity of [1, 2, 3]) {
+    cursor += odds[rarity] || 0;
+    if (roll <= cursor) {
+      selectedRarity = rarity;
+      break;
+    }
+  }
+
+  const pool = UNIT_CATALOG.filter(unit => unit.rarity === selectedRarity);
+  return pool[Math.floor(Math.random() * pool.length)] || UNIT_CATALOG[0];
+}
+
+function createShopOffer(slot, level) {
+  const unit = pickRandomUnitForLevel(level);
+  return {
+    slot,
+    unitId: unit.id,
+    name: unit.name,
+    cost: unit.cost,
+    rarity: unit.rarity,
+    traits: [...unit.traits],
+    skill: unit.skill || null,
+    stats: { ...unit.stats },
+  };
 }
 
 export function createGameRuntime({ state, events }) {
@@ -199,10 +240,39 @@ export function createGameRuntime({ state, events }) {
       state.player.gold -= state.economy.rerollCost;
     }
 
-    state.shop = Array.from({ length: BOARD_CONFIG.shopSize }, (_, index) => createShopOffer(index));
+    state.shop = Array.from({ length: BOARD_CONFIG.shopSize }, (_, index) => createShopOffer(index, state.player.level));
     if (!silent) {
       setMessage(free ? 'La boutique est prête.' : 'Boutique rerollée.');
     }
+  }
+
+  function tryLevelUp() {
+    let leveled = false;
+    while (state.player.level < 6 && state.player.xp >= getXpRequired(state.player.level)) {
+      state.player.xp -= getXpRequired(state.player.level);
+      state.player.level += 1;
+      leveled = true;
+    }
+    return leveled;
+  }
+
+  function buyXp() {
+    if (state.player.level >= 6) {
+      setMessage('Niveau max atteint. Respire un peu.');
+      return;
+    }
+
+    if (state.player.gold < state.economy.xpBuyCost) {
+      setMessage('Pas assez d’or pour acheter de l’XP.');
+      return;
+    }
+
+    state.player.gold -= state.economy.xpBuyCost;
+    state.player.xp += state.economy.xpPerBuy;
+    const leveled = tryLevelUp();
+    setMessage(leveled ? `Niveau ${state.player.level} atteint. Shop amélioré, cap augmenté.` : `+${state.economy.xpPerBuy} XP.`);
+    rerollShop({ free: true, silent: true });
+    render();
   }
 
   function seedEnemyTeam() {
@@ -304,7 +374,7 @@ export function createGameRuntime({ state, events }) {
     });
 
     state.roster.push(unit);
-    state.shop[slot] = createShopOffer(slot);
+    state.shop[slot] = createShopOffer(slot, state.player.level);
     state.meta.selectedBenchUnitId = unit.id;
 
     const merged = autoMergePlayerUnits();
@@ -332,8 +402,8 @@ export function createGameRuntime({ state, events }) {
       return;
     }
 
-    if (!selectedUnit.position && getBoardUnitCount() >= BOARD_CONFIG.maxUnitsOnBoard) {
-      setMessage(`Limite atteinte: ${BOARD_CONFIG.maxUnitsOnBoard} unités sur le board.`);
+    if (!selectedUnit.position && getBoardUnitCount() >= getMaxUnitsForLevel(state.player.level)) {
+      setMessage(`Cap atteint: niveau ${state.player.level} = ${getMaxUnitsForLevel(state.player.level)} unités.`);
       return;
     }
 
@@ -363,6 +433,9 @@ export function createGameRuntime({ state, events }) {
     const total = base + interest + winBonus;
 
     state.player.gold += total;
+    state.player.xp += 2;
+    tryLevelUp();
+
     state.meta.lastIncome = {
       base,
       interest,
@@ -380,12 +453,12 @@ export function createGameRuntime({ state, events }) {
     if (winner === 'player') {
       state.player.wins += 1;
       state.round.number += 1;
-      setMessage(`Victoire. +${state.meta.lastIncome.total} or (${state.meta.lastIncome.base} base, ${state.meta.lastIncome.interest} intérêt, ${state.meta.lastIncome.winBonus} bonus).`);
+      setMessage(`Victoire. +${state.meta.lastIncome.total} or, +2 XP. Niveau ${state.player.level}.`);
     } else if (winner === 'enemy') {
       state.player.lives = Math.max(0, state.player.lives - 10);
-      setMessage(`Défaite. -10 PV mais +${state.meta.lastIncome.total} or pour rebuild.`);
+      setMessage(`Défaite. -10 PV, mais +${state.meta.lastIncome.total} or et +2 XP.`);
     } else {
-      setMessage(`Égalité. +${state.meta.lastIncome.total} or, on reprend.`);
+      setMessage(`Égalité. +${state.meta.lastIncome.total} or et +2 XP.`);
     }
 
     state.battle.phase = 'finished';
@@ -398,6 +471,10 @@ export function createGameRuntime({ state, events }) {
   function runBattleLoop() {
     const result = runAutoBattleStep(state.roster);
     state.battle.tick += 1;
+
+    if (result.battleEvents?.length) {
+      state.meta.lastSpell = result.battleEvents[result.battleEvents.length - 1];
+    }
 
     if (result.finished) {
       state.battle.winner = result.winner;
@@ -422,10 +499,11 @@ export function createGameRuntime({ state, events }) {
     state.battle.phase = 'running';
     state.battle.winner = null;
     state.battle.tick = 0;
+    state.meta.lastSpell = null;
 
     seedEnemyTeam();
     restoreArmyForBattle();
-    setMessage('Combat lancé. Si tes synergies sont nulles, le board va te le faire payer.');
+    setMessage('Combat lancé. Cette fois les spells peuvent vraiment sauver ou ruiner un round.');
     render();
     battleTimer = setTimeout(runBattleLoop, 450);
   }
@@ -438,6 +516,7 @@ export function createGameRuntime({ state, events }) {
     state.meta.selectedBenchUnitId = null;
     state.meta.lastIncome = null;
     state.meta.lastFusion = null;
+    state.meta.lastSpell = null;
     seedEnemyTeam();
     restoreArmyForBattle();
     rerollShop({ free: true, silent: true });
@@ -448,7 +527,10 @@ export function createGameRuntime({ state, events }) {
   function render() {
     refreshRosterStats();
     syncBoardOccupants();
-    renderGame(state);
+    renderGame(state, {
+      maxUnitsOnBoard: getMaxUnitsForLevel(state.player.level),
+      nextLevelXp: getXpRequired(state.player.level),
+    });
 
     document.getElementById('startBattleBtn')?.addEventListener('click', startBattle);
     document.getElementById('resetPrepBtn')?.addEventListener('click', resetPreparation);
@@ -456,6 +538,7 @@ export function createGameRuntime({ state, events }) {
       rerollShop({ free: false });
       render();
     });
+    document.getElementById('buyXpBtn')?.addEventListener('click', buyXp);
 
     document.querySelectorAll('[data-buy-slot]').forEach(button => {
       button.addEventListener('click', () => buyShopOffer(Number(button.dataset.buySlot)));
