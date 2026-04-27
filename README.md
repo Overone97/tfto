@@ -4,7 +4,7 @@ Auto-battler 2D inspiré de Teamfight Tactics, pensé pour grandir proprement pa
 
 ## Version actuelle
 
-- `0.0.2` — shop, bench, placement joueur, rounds ennemis et lien GitHub Pages jouable.
+- `0.0.3` — fusion auto par 3, synergies actives, économie avec intérêts et nouveau lien jouable.
 
 ## Vision
 

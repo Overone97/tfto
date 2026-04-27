@@ -6,7 +6,9 @@ export function createUnitInstance(unitData, overrides = {}) {
     team: overrides.team || unitData.team,
     traits: unitData.traits,
     cost: unitData.cost,
+    starLevel: overrides.starLevel || 1,
     position: overrides.position || null,
+    baseStats: { ...unitData.stats },
     stats: { ...unitData.stats },
     combat: {
       currentHealth: unitData.stats.maxHealth,

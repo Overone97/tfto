@@ -4,6 +4,10 @@ function renderTraits(traits) {
   return traits.map(trait => `<span class="tag">${trait}</span>`).join('');
 }
 
+function renderStars(starLevel) {
+  return '★'.repeat(starLevel || 1);
+}
+
 export function renderGame(state) {
   const root = document.getElementById('app');
   if (!root) return;
@@ -18,7 +22,8 @@ export function renderGame(state) {
         ${unit ? `
           <div>
             <strong>${unit.name}</strong>
-            <small>${unit.combat.currentHealth} / ${unit.stats.maxHealth} PV</small>
+            <small>${renderStars(unit.starLevel)} · ${unit.combat.currentHealth} / ${unit.stats.maxHealth} PV</small>
+            <small>${unit.stats.attackDamage} atk · portée ${unit.stats.attackRange}</small>
           </div>
           <small>${unit.team === 'player' ? 'clic sans sélection = retrait' : 'ennemi'}</small>
         ` : `<small>${isPlayerZone ? 'zone joueur' : 'zone ennemi'}</small>`}
@@ -31,7 +36,7 @@ export function renderGame(state) {
     .map(unit => `
       <button class="bench-card ${state.meta.selectedBenchUnitId === unit.id ? 'is-selected' : ''}" data-bench-unit="${unit.id}" ${state.battle.phase === 'running' ? 'disabled' : ''}>
         <strong>${unit.name}</strong>
-        <small>${unit.cost} or · ${unit.stats.attackDamage} atk · ${unit.stats.maxHealth} PV</small>
+        <small>${renderStars(unit.starLevel)} · ${unit.cost} or · ${unit.stats.attackDamage} atk · ${unit.stats.maxHealth} PV</small>
         <div class="tags">${renderTraits(unit.traits)}</div>
       </button>
     `).join('');
@@ -47,13 +52,26 @@ export function renderGame(state) {
     </div>
   `).join('');
 
+  const synergyCards = state.synergies.length
+    ? state.synergies.map(synergy => `
+        <div class="synergy-card">
+          <strong>${synergy.name} (${synergy.count})</strong>
+          <small>${synergy.description}</small>
+        </div>
+      `).join('')
+    : '<p class="empty-state">Aucune synergie active. Là, c’est juste du placement à mains nues.</p>';
+
+  const lastIncome = state.meta.lastIncome
+    ? `<div class="income-box"><strong>Dernier revenu</strong><small>${state.meta.lastIncome.total} or = ${state.meta.lastIncome.base} base + ${state.meta.lastIncome.interest} intérêt + ${state.meta.lastIncome.winBonus} bonus</small></div>`
+    : '<p class="empty-state">Lance un round pour voir les revenus.</p>';
+
   root.innerHTML = `
     <div class="screen">
       <div class="version">v${GAME_VERSION}</div>
       <section class="panel hero">
         <div>
           <h1>tfto</h1>
-          <p>Mini proto jouable: shop, bench, placement, auto-combat et rounds.</p>
+          <p>Fusion auto par 3, synergies actives et économie avec intérêts.</p>
         </div>
         <div class="hero-stats">
           <span>Or <strong>${state.player.gold}</strong></span>
@@ -89,10 +107,27 @@ export function renderGame(state) {
               <small>Phase: ${state.battle.phase} · Tick ${state.battle.tick}</small>
             </div>
             <p>Vainqueur: <strong>${state.battle.winner || 'aucun'}</strong></p>
+            ${state.meta.lastFusion ? `<div class="income-box fusion-box"><strong>Fusion</strong><small>${state.meta.lastFusion}</small></div>` : ''}
             <div class="actions">
               <button id="startBattleBtn">Lancer l'auto-combat</button>
               <button id="resetPrepBtn" class="ghost">Reset</button>
             </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-head">
+              <h2>Synergies</h2>
+              <small>Actives sur les unités posées</small>
+            </div>
+            <div class="synergies">${synergyCards}</div>
+          </div>
+
+          <div class="panel">
+            <div class="section-head">
+              <h2>Économie</h2>
+              <small>Intérêt: +1 or tous les 5 or, max +3</small>
+            </div>
+            ${lastIncome}
           </div>
 
           <div class="panel">
