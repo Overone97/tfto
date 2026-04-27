@@ -8,7 +8,11 @@ function renderStars(starLevel) {
   return '★'.repeat(starLevel || 1);
 }
 
-export function renderGame(state) {
+function renderRarity(rarity) {
+  return '●'.repeat(rarity || 1);
+}
+
+export function renderGame(state, ui = {}) {
   const root = document.getElementById('app');
   if (!root) return;
 
@@ -23,7 +27,7 @@ export function renderGame(state) {
           <div>
             <strong>${unit.name}</strong>
             <small>${renderStars(unit.starLevel)} · ${unit.combat.currentHealth} / ${unit.stats.maxHealth} PV</small>
-            <small>${unit.stats.attackDamage} atk · portée ${unit.stats.attackRange}</small>
+            <small>${unit.stats.attackDamage} atk · portée ${unit.stats.attackRange} · mana ${unit.combat.mana}/${unit.combat.manaToCast === 999 ? '∞' : unit.combat.manaToCast}</small>
           </div>
           <small>${unit.team === 'player' ? 'clic sans sélection = retrait' : 'ennemi'}</small>
         ` : `<small>${isPlayerZone ? 'zone joueur' : 'zone ennemi'}</small>`}
@@ -36,18 +40,20 @@ export function renderGame(state) {
     .map(unit => `
       <button class="bench-card ${state.meta.selectedBenchUnitId === unit.id ? 'is-selected' : ''}" data-bench-unit="${unit.id}" ${state.battle.phase === 'running' ? 'disabled' : ''}>
         <strong>${unit.name}</strong>
-        <small>${renderStars(unit.starLevel)} · ${unit.cost} or · ${unit.stats.attackDamage} atk · ${unit.stats.maxHealth} PV</small>
+        <small>${renderStars(unit.starLevel)} · ${renderRarity(unit.rarity)} · ${unit.cost} or · ${unit.stats.attackDamage} atk · ${unit.stats.maxHealth} PV</small>
         <div class="tags">${renderTraits(unit.traits)}</div>
+        ${unit.skill ? `<small>Spell: ${unit.skill.name}</small>` : ''}
       </button>
     `).join('');
 
   const shopCards = state.shop.map((offer, index) => `
-    <div class="shop-card">
+    <div class="shop-card rarity-${offer.rarity}">
       <div>
         <strong>${offer.name}</strong>
-        <small>${offer.cost} or</small>
+        <small>${renderRarity(offer.rarity)} · ${offer.cost} or</small>
       </div>
       <div class="tags">${renderTraits(offer.traits)}</div>
+      ${offer.skill ? `<small>${offer.skill.name}</small>` : '<small>Pas de spell</small>'}
       <button data-buy-slot="${index}" ${state.battle.phase === 'running' ? 'disabled' : ''}>Acheter</button>
     </div>
   `).join('');
@@ -65,19 +71,22 @@ export function renderGame(state) {
     ? `<div class="income-box"><strong>Dernier revenu</strong><small>${state.meta.lastIncome.total} or = ${state.meta.lastIncome.base} base + ${state.meta.lastIncome.interest} intérêt + ${state.meta.lastIncome.winBonus} bonus</small></div>`
     : '<p class="empty-state">Lance un round pour voir les revenus.</p>';
 
+  const xpTarget = ui.nextLevelXp === Infinity ? 'MAX' : `${state.player.xp} / ${ui.nextLevelXp}`;
+
   root.innerHTML = `
     <div class="screen">
       <div class="version">v${GAME_VERSION}</div>
       <section class="panel hero">
         <div>
           <h1>tfto</h1>
-          <p>Fusion auto par 3, synergies actives et économie avec intérêts.</p>
+          <p>Boutique à raretés, niveau joueur et premiers spells qui claquent.</p>
         </div>
         <div class="hero-stats">
           <span>Or <strong>${state.player.gold}</strong></span>
           <span>PV <strong>${state.player.lives}</strong></span>
           <span>Round <strong>${state.round.number}</strong></span>
-          <span>Wins <strong>${state.player.wins}</strong></span>
+          <span>Niv <strong>${state.player.level}</strong></span>
+          <span>Cap <strong>${ui.maxUnitsOnBoard}</strong></span>
         </div>
       </section>
 
@@ -108,9 +117,20 @@ export function renderGame(state) {
             </div>
             <p>Vainqueur: <strong>${state.battle.winner || 'aucun'}</strong></p>
             ${state.meta.lastFusion ? `<div class="income-box fusion-box"><strong>Fusion</strong><small>${state.meta.lastFusion}</small></div>` : ''}
+            ${state.meta.lastSpell ? `<div class="income-box spell-box"><strong>Dernier spell</strong><small>${state.meta.lastSpell}</small></div>` : ''}
             <div class="actions">
               <button id="startBattleBtn">Lancer l'auto-combat</button>
               <button id="resetPrepBtn" class="ghost">Reset</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-head">
+              <h2>Joueur</h2>
+              <small>XP ${xpTarget}</small>
+            </div>
+            <div class="actions vertical">
+              <button id="buyXpBtn">Acheter 4 XP · ${state.economy.xpBuyCost} or</button>
             </div>
           </div>
 

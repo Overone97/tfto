@@ -6,6 +6,8 @@ export function createUnitInstance(unitData, overrides = {}) {
     team: overrides.team || unitData.team,
     traits: unitData.traits,
     cost: unitData.cost,
+    rarity: unitData.rarity,
+    skill: unitData.skill || null,
     starLevel: overrides.starLevel || 1,
     position: overrides.position || null,
     baseStats: { ...unitData.stats },
@@ -14,6 +16,8 @@ export function createUnitInstance(unitData, overrides = {}) {
       currentHealth: unitData.stats.maxHealth,
       attackCooldown: 0,
       targetId: null,
+      mana: 0,
+      manaToCast: unitData.skill?.manaToCast || 999,
       isAlive: true,
     },
   };

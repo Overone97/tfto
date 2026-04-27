@@ -35,3 +35,4 @@
 - 0.0.1 — grille, board state, unités data-driven, début du combat auto
 - 0.0.2 — shop, bench, placement, rounds ennemis et prototype GitHub Pages jouable
 - 0.0.3 — fusion auto, synergies actives et économie avec intérêts
+- 0.0.4 — shop à raretés, XP/niveau joueur, cap dynamique et premiers spells

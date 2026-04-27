@@ -4,7 +4,7 @@ Auto-battler 2D inspiré de Teamfight Tactics, pensé pour grandir proprement pa
 
 ## Version actuelle
 
-- `0.0.3` — fusion auto par 3, synergies actives, économie avec intérêts et nouveau lien jouable.
+- `0.0.4` — shop à raretés selon le niveau, XP joueur, cap d’unités dynamique et premiers spells jouables.
 
 ## Vision
 
