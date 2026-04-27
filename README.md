@@ -2,6 +2,10 @@
 
 Auto-battler 2D inspiré de Teamfight Tactics, pensé pour grandir proprement par itérations.
 
+## Version actuelle
+
+- `0.0.1` — fondation du board, premières unités data-driven, auto-combat minimal.
+
 ## Vision
 
 Construire un prototype lisible, extensible et data-driven autour de 6 piliers :
@@ -43,3 +47,7 @@ Construire un prototype lisible, extensible et data-driven autour de 6 piliers :
 ## Structure
 
 Voir `docs/architecture.md` et `docs/roadmap.md`.
+
+## Notes
+
+Première PR dédiée à la fondation technique du projet.

@@ -1,0 +1,58 @@
+export const UNIT_CATALOG = [
+  {
+    id: 'eclaireur-sylvestre',
+    name: 'Éclaireur sylvestre',
+    cost: 1,
+    team: 'player',
+    traits: ['foret', 'tireur'],
+    stats: {
+      maxHealth: 70,
+      attackDamage: 14,
+      attackRange: 3,
+      attackSpeed: 1.0,
+      moveSpeed: 1,
+    },
+  },
+  {
+    id: 'garde-racine',
+    name: 'Garde-racine',
+    cost: 1,
+    team: 'player',
+    traits: ['foret', 'gardien'],
+    stats: {
+      maxHealth: 110,
+      attackDamage: 9,
+      attackRange: 1,
+      attackSpeed: 0.8,
+      moveSpeed: 1,
+    },
+  },
+  {
+    id: 'apprentie-braises',
+    name: 'Apprentie des braises',
+    cost: 2,
+    team: 'enemy',
+    traits: ['mage', 'flamme'],
+    stats: {
+      maxHealth: 65,
+      attackDamage: 16,
+      attackRange: 3,
+      attackSpeed: 0.9,
+      moveSpeed: 1,
+    },
+  },
+  {
+    id: 'sentinelle-sacree',
+    name: 'Sentinelle sacrée',
+    cost: 3,
+    team: 'enemy',
+    traits: ['gardien'],
+    stats: {
+      maxHealth: 130,
+      attackDamage: 11,
+      attackRange: 1,
+      attackSpeed: 0.7,
+      moveSpeed: 1,
+    },
+  },
+];
