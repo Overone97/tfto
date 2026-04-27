@@ -131,12 +131,12 @@
         opacity: 0.45;
         cursor: not-allowed;
       }
-      .shop, .bench {
+      .shop, .bench, .synergies {
         display: grid;
         gap: 12px;
         margin-top: 12px;
       }
-      .shop-card, .bench-card {
+      .shop-card, .bench-card, .synergy-card, .income-box {
         background: rgba(255,255,255,0.04);
         border: 1px solid var(--line);
         border-radius: 18px;
@@ -157,6 +157,14 @@
       .bench-card.is-selected {
         border-color: rgba(56,189,248,0.85);
         box-shadow: 0 0 0 1px rgba(56,189,248,0.25);
+      }
+      .synergy-card, .income-box {
+        display: grid;
+        gap: 6px;
+      }
+      .fusion-box {
+        margin-bottom: 12px;
+        border-color: rgba(245,158,11,0.45);
       }
       .tag {
         display: inline-flex;
