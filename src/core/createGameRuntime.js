@@ -471,6 +471,7 @@ export function createGameRuntime({ state, events }) {
   function runBattleLoop() {
     const result = runAutoBattleStep(state.roster);
     state.battle.tick += 1;
+    state.meta.lastBattleActions = result.actions || [];
 
     if (result.battleEvents?.length) {
       state.meta.lastSpell = result.battleEvents[result.battleEvents.length - 1];
@@ -500,6 +501,7 @@ export function createGameRuntime({ state, events }) {
     state.battle.winner = null;
     state.battle.tick = 0;
     state.meta.lastSpell = null;
+    state.meta.lastBattleActions = [];
 
     seedEnemyTeam();
     restoreArmyForBattle();
@@ -517,6 +519,7 @@ export function createGameRuntime({ state, events }) {
     state.meta.lastIncome = null;
     state.meta.lastFusion = null;
     state.meta.lastSpell = null;
+    state.meta.lastBattleActions = [];
     seedEnemyTeam();
     restoreArmyForBattle();
     rerollShop({ free: true, silent: true });

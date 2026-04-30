@@ -12,6 +12,147 @@ function renderRarity(rarity) {
   return '●'.repeat(rarity || 1);
 }
 
+function getUnitActionMap(actions = []) {
+  return actions.reduce((map, action) => {
+    if (action.sourceId) map.set(action.sourceId, action);
+    return map;
+  }, new Map());
+}
+
+function getIsoPosition(position) {
+  const originX = 50;
+  const originY = 12;
+  const stepX = 12;
+  const stepY = 11;
+
+  return {
+    x: originX + (position.column - position.row) * stepX,
+    y: originY + (position.column + position.row) * stepY,
+  };
+}
+
+function getUnitVisualProfile(unit) {
+  if (unit.stats.attackRange >= 4) return 'shape-artillery';
+  if (unit.stats.attackRange >= 3) return 'shape-ranger';
+  if (unit.stats.maxHealth >= 120) return 'shape-tank';
+  return 'shape-duelist';
+}
+
+function getProjectileStyle(from, to) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const distance = Math.sqrt((dx ** 2) + (dy ** 2));
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+  return {
+    left: `${from.x}%`,
+    top: `${from.y}%`,
+    width: `${distance}%`,
+    angle,
+  };
+}
+
+function renderArena(state) {
+  const aliveUnits = state.roster
+    .filter(unit => unit.position && unit.combat.isAlive)
+    .sort((a, b) => (a.position.column + a.position.row) - (b.position.column + b.position.row));
+
+  const actionMap = getUnitActionMap(state.meta.lastBattleActions);
+  const floatingTexts = (state.meta.lastBattleActions || [])
+    .filter(action => action.targetId && action.label)
+    .map((action, index) => {
+      const target = aliveUnits.find(unit => unit.id === action.targetId);
+      if (!target?.position) return '';
+      const coords = getIsoPosition(target.position);
+      return `
+        <div class="floating-text" style="left:${coords.x}%; top:${coords.y - 6 - index * 3}% ; --float-color:${action.color || '#fff'}">
+          ${action.label}
+        </div>
+      `;
+    })
+    .join('');
+
+  const units = aliveUnits.map(unit => {
+    const coords = getIsoPosition(unit.position);
+    const action = actionMap.get(unit.id);
+    const hpRatio = Math.max(0, Math.min(1, unit.combat.currentHealth / unit.stats.maxHealth));
+    const actionClass = action ? `action-${action.type}` : '';
+    const isCasting = action && action.type.startsWith('spell');
+    const ringClass = unit.team === 'player' ? 'ring-player' : 'ring-enemy';
+    const shapeClass = getUnitVisualProfile(unit);
+
+    return `
+      <div
+        class="arena-unit team-${unit.team} ${shapeClass} ${actionClass} ${isCasting ? 'is-casting' : ''}"
+        style="left:${coords.x}%; top:${coords.y}%; --hp:${hpRatio}; --effect:${action?.color || '#ffffff'}"
+      >
+        <div class="unit-ring ${ringClass}"></div>
+        <div class="unit-body rarity-${unit.rarity}">
+          <div class="unit-core"></div>
+        </div>
+        <div class="unit-hp"><span style="transform:scaleX(${hpRatio})"></span></div>
+        <div class="unit-label">${unit.name}</div>
+      </div>
+    `;
+  }).join('');
+
+  const projectiles = (state.meta.lastBattleActions || []).map((action, index) => {
+    if (!['attack-ranged', 'spell-burst', 'spell-heal'].includes(action.type)) return '';
+    const source = aliveUnits.find(unit => unit.id === action.sourceId);
+    const target = aliveUnits.find(unit => unit.id === action.targetId);
+    if (!source?.position || !target?.position) return '';
+    const from = getIsoPosition(source.position);
+    const to = getIsoPosition(target.position);
+    const style = getProjectileStyle(from, to);
+
+    return `
+      <div
+        class="projectile projectile-${action.type}"
+        style="left:${style.left}; top:${style.top}; width:${style.width}; transform:translateY(-50%) rotate(${style.angle}deg); --projectile-color:${action.color || '#fff'}; animation-delay:${index * 30}ms"
+      >
+        <span></span>
+      </div>
+    `;
+  }).join('');
+
+  const attackBursts = (state.meta.lastBattleActions || []).map((action, index) => {
+    const target = aliveUnits.find(unit => unit.id === action.targetId);
+    if (!target?.position) return '';
+    if (!['attack-ranged', 'attack-melee', 'spell-burst', 'spell-slash', 'spell-wave', 'spell-heal'].includes(action.type)) return '';
+    const coords = getIsoPosition(target.position);
+    const size = action.type === 'spell-wave' ? 11 : action.type === 'spell-burst' ? 8 : 6;
+    return `
+      <div class="impact impact-${action.type}" style="left:${coords.x}%; top:${coords.y}%; width:${size}rem; height:${size}rem; --impact-color:${action.color || '#fff'}; animation-delay:${index * 40}ms"></div>
+    `;
+  }).join('');
+
+  const phaseLabel = state.battle.phase === 'running' ? 'Combat en cours' : 'Préparation';
+
+  return `
+    <div class="arena-shell">
+      <div class="arena-head">
+        <div>
+          <h2>Plateau combat</h2>
+          <small>${phaseLabel} · Tick ${state.battle.tick}</small>
+        </div>
+        <div class="arena-legend">
+          <span><i class="dot ally"></i> alliés</span>
+          <span><i class="dot enemy"></i> ennemis</span>
+        </div>
+      </div>
+      <div class="arena-stage">
+        <div class="arena-grid"></div>
+        <div class="arena-glow ally-glow"></div>
+        <div class="arena-glow enemy-glow"></div>
+        ${projectiles}
+        ${attackBursts}
+        ${floatingTexts}
+        ${units}
+      </div>
+    </div>
+  `;
+}
+
 export function renderGame(state, ui = {}) {
   const root = document.getElementById('app');
   if (!root) return;
@@ -79,7 +220,7 @@ export function renderGame(state, ui = {}) {
       <section class="panel hero">
         <div>
           <h1>tfto</h1>
-          <p>Boutique à raretés, niveau joueur et premiers spells qui claquent.</p>
+          <p>Boutique à raretés, niveau joueur et premiers spells qui claquent — maintenant avec un faux plateau 3D qui vit un peu.</p>
         </div>
         <div class="hero-stats">
           <span>Or <strong>${state.player.gold}</strong></span>
@@ -92,6 +233,10 @@ export function renderGame(state, ui = {}) {
 
       <section class="layout">
         <div class="stack">
+          <div class="panel arena-panel">
+            ${renderArena(state)}
+          </div>
+
           <div class="panel">
             <div class="section-head">
               <h2>Board</h2>

@@ -47,7 +47,7 @@
         padding: 20px;
         box-shadow: 0 18px 50px rgba(0,0,0,0.3);
       }
-      .hero, .section-head, .actions, .hero-stats {
+      .hero, .section-head, .actions, .hero-stats, .arena-head {
         display: flex;
         justify-content: space-between;
         gap: 16px;
@@ -57,7 +57,7 @@
         flex-direction: column;
         align-items: stretch;
       }
-      .hero-stats, .tags {
+      .hero-stats, .tags, .arena-legend {
         flex-wrap: wrap;
       }
       .hero-stats span {
@@ -75,6 +75,200 @@
       .stack {
         display: grid;
         gap: 20px;
+      }
+      .arena-panel {
+        overflow: hidden;
+      }
+      .arena-shell {
+        display: grid;
+        gap: 16px;
+      }
+      .arena-stage {
+        position: relative;
+        min-height: 460px;
+        overflow: hidden;
+        border-radius: 26px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background:
+          radial-gradient(circle at 50% 18%, rgba(255,255,255,0.1), transparent 28%),
+          linear-gradient(180deg, rgba(15,23,42,0.25) 0%, rgba(15,23,42,0.85) 100%),
+          linear-gradient(135deg, rgba(56,189,248,0.08), rgba(15,23,42,0.1));
+        perspective: 1000px;
+      }
+      .arena-grid {
+        position: absolute;
+        inset: 18% 12% 12%;
+        border-radius: 28px;
+        background:
+          linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(15,118,110,0.35), rgba(15,23,42,0.95));
+        background-size: calc(100% / 7) calc(100% / 4), calc(100% / 7) calc(100% / 4), 100% 100%;
+        transform: rotateX(68deg);
+        transform-origin: center center;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.06);
+      }
+      .arena-glow {
+        position: absolute;
+        width: 16rem;
+        height: 10rem;
+        border-radius: 999px;
+        filter: blur(28px);
+        opacity: 0.45;
+      }
+      .ally-glow {
+        left: 10%;
+        bottom: 10%;
+        background: rgba(34,197,94,0.32);
+      }
+      .enemy-glow {
+        right: 8%;
+        top: 12%;
+        background: rgba(239,68,68,0.28);
+      }
+      .arena-unit {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        z-index: 2;
+      }
+      .unit-ring {
+        width: 3.8rem;
+        height: 1rem;
+        border-radius: 999px;
+        opacity: 0.75;
+        transform: rotateX(68deg);
+        border: 1px solid rgba(255,255,255,0.15);
+      }
+      .ring-player { background: rgba(34,197,94,0.22); }
+      .ring-enemy { background: rgba(239,68,68,0.22); }
+      .unit-body {
+        width: 3.6rem;
+        height: 4.6rem;
+        margin-top: -2.1rem;
+        border-radius: 1.4rem 1.4rem 0.9rem 0.9rem;
+        border: 1px solid rgba(255,255,255,0.16);
+        background: linear-gradient(180deg, rgba(255,255,255,0.24), rgba(15,23,42,0.15));
+        backdrop-filter: blur(10px);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 0 24px color-mix(in srgb, var(--effect, #fff) 28%, transparent);
+      }
+      .shape-ranger .unit-body {
+        height: 4.2rem;
+        border-radius: 1rem 1rem 1.6rem 1.6rem;
+      }
+      .shape-tank .unit-body {
+        width: 4.2rem;
+        height: 4.8rem;
+        border-radius: 1rem;
+      }
+      .shape-duelist .unit-body {
+        width: 3.2rem;
+        height: 4.8rem;
+        border-radius: 1.6rem 1.6rem 0.8rem 0.8rem;
+      }
+      .shape-artillery .unit-body {
+        width: 4.6rem;
+        height: 3.6rem;
+        border-radius: 1.2rem;
+      }
+      .unit-core {
+        width: 1.35rem;
+        height: 1.35rem;
+        border-radius: 999px;
+        background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.95), var(--effect, #fff));
+        box-shadow: 0 0 18px var(--effect, #fff);
+      }
+      .shape-artillery .unit-core {
+        width: 1.8rem;
+        height: 0.9rem;
+        border-radius: 999px;
+      }
+      .shape-tank .unit-core {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+      .unit-hp {
+        width: 4rem;
+        height: 0.36rem;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(15,23,42,0.9);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+      .unit-hp span {
+        display: block;
+        width: 100%;
+        height: 100%;
+        transform-origin: left center;
+        background: linear-gradient(90deg, #22c55e, #84cc16);
+      }
+      .unit-label {
+        font-size: 11px;
+        color: #cbd5e1;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.85);
+        white-space: nowrap;
+      }
+      .impact, .floating-text {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 3;
+      }
+      .projectile {
+        position: absolute;
+        height: 0.35rem;
+        transform-origin: left center;
+        pointer-events: none;
+        z-index: 3;
+      }
+      .projectile span {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, color-mix(in srgb, var(--projectile-color, #fff) 12%, transparent), var(--projectile-color, #fff));
+        box-shadow: 0 0 14px var(--projectile-color, #fff);
+        animation: projectileDash 260ms linear forwards;
+      }
+      .projectile-spell-heal span {
+        background: linear-gradient(90deg, rgba(255,255,255,0.05), var(--projectile-color, #fff), rgba(255,255,255,0.05));
+        height: 0.28rem;
+      }
+      .projectile-spell-burst span {
+        height: 0.5rem;
+      }
+      .impact {
+        border-radius: 999px;
+        border: 2px solid var(--impact-color, #fff);
+        box-shadow: 0 0 30px var(--impact-color, #fff);
+        animation: impactPulse 420ms ease-out forwards;
+      }
+      .floating-text {
+        color: var(--float-color, #fff);
+        font-weight: 800;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.85);
+        animation: floatUp 700ms ease-out forwards;
+      }
+      .action-attack-melee .unit-body,
+      .action-spell-slash .unit-body {
+        animation: meleeStrike 420ms ease-out;
+      }
+      .action-attack-ranged .unit-body {
+        animation: rangedStrike 420ms ease-out;
+      }
+      .action-move {
+        animation: moveHop 420ms ease-out;
+      }
+      .is-casting .unit-core {
+        animation: castPulse 480ms ease-out;
+      }
+      .impact-spell-heal,
+      .impact-spell-wave {
+        border-style: dashed;
       }
       .board {
         display: grid;
@@ -94,12 +288,8 @@
         text-align: left;
         color: inherit;
       }
-      .cell.zone-player {
-        background: rgba(34,197,94,0.05);
-      }
-      .cell.zone-enemy {
-        background: rgba(239,68,68,0.05);
-      }
+      .cell.zone-player { background: rgba(34,197,94,0.05); }
+      .cell.zone-enemy { background: rgba(239,68,68,0.05); }
       .cell.team-player {
         border-color: rgba(34,197,94,0.45);
         box-shadow: inset 0 0 0 1px rgba(34,197,94,0.18);
@@ -111,10 +301,6 @@
       .cell-coords, small, .empty-state {
         font-size: 12px;
         color: var(--muted);
-      }
-      .cell-action {
-        color: var(--accent-2);
-        font-size: 12px;
       }
       h1, h2, p { margin-top: 0; }
       button {
@@ -186,9 +372,59 @@
         font-size: 11px;
         margin-right: 6px;
       }
+      .arena-legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        display: inline-block;
+      }
+      .dot.ally { background: var(--ally); }
+      .dot.enemy { background: var(--enemy); }
+      @keyframes meleeStrike {
+        0% { transform: translateY(0) scale(1); }
+        45% { transform: translateY(-8px) scale(1.08); }
+        100% { transform: translateY(0) scale(1); }
+      }
+      @keyframes rangedStrike {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.12) rotate(-6deg); }
+        100% { transform: scale(1); }
+      }
+      @keyframes moveHop {
+        0% { transform: translate(-50%, -50%); }
+        50% { transform: translate(-50%, calc(-50% - 18px)); }
+        100% { transform: translate(-50%, -50%); }
+      }
+      @keyframes castPulse {
+        0% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.5); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.95; }
+      }
+      @keyframes impactPulse {
+        0% { transform: translate(-50%, -50%) scale(0.25); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+      }
+      @keyframes projectileDash {
+        0% { opacity: 0; transform: scaleX(0.1); transform-origin: left center; }
+        30% { opacity: 1; }
+        100% { opacity: 0; transform: scaleX(1); transform-origin: left center; }
+      }
+      @keyframes floatUp {
+        0% { transform: translate(-50%, -50%) translateY(0); opacity: 0; }
+        20% { opacity: 1; }
+        100% { transform: translate(-50%, -50%) translateY(-34px); opacity: 0; }
+      }
       @media (max-width: 960px) {
         .layout { grid-template-columns: 1fr; }
-        .hero, .section-head, .actions { flex-direction: column; align-items: stretch; }
+        .hero, .section-head, .actions, .arena-head { flex-direction: column; align-items: stretch; }
+        .arena-stage { min-height: 380px; }
       }
     </style>
   </head>
