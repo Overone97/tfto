@@ -4,13 +4,14 @@ import { createBattleState } from '../../domain/battle/createBattleState.js';
 export function createInitialGameState() {
   return {
     meta: {
-      version: '0.0.4',
+      version: '0.0.5',
       phase: 'prototype-plus-plus',
       message: 'Monte ton niveau, lis les raretés du shop, puis abuse des premiers spells.',
       selectedBenchUnitId: null,
       lastIncome: null,
       lastFusion: null,
       lastSpell: null,
+      lastBattleActions: [],
     },
     player: {
       gold: 10,
